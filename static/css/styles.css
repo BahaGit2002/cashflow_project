@@ -1,0 +1,11 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    {% if title == 'Удалить запись' %}
+        <form method="post">
+            {% csrf_token %}
+            <p>Вы уверены, что хотите удалить запись от {{ record.created_at }} на сумму {{ record.amount }} руб.?</p>
+            <button type="submit" class="btn btn-danger">Удалить</button>
+            <a href="{% url 'cashflow:index' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            {% if record %}
+                <div class="mb-3">
+                    <label class="form-label">Дата создания:</label>
+                    <input type="text" class="form-control" value="{{ record.created_at|date:'Y-m-d' }}" readonly>
+                </div>
+            {% else %}
+                <div class="mb-3">
+                    <label class="form-label">Дата создания:</label>
+                    <input type="text" class="form-control" value="{% now 'Y-m-d' %}" readonly>
+                </div>
+            {% endif %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'cashflow:index' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const typeSelect = document.querySelector('#id_type');
+            const categorySelect = document.querySelector('#id_category');
+            const initialCategoryId = categorySelect.value;
+
+            function updateCategories() {
+                const typeId = typeSelect.value;
+                if (typeId) {
+                    fetch(`/api/categories/${typeId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            categorySelect.innerHTML = '<option value="">---------</option>';
+                            data.categories.forEach(category => {
+                                const option = document.createElement('option');
+                                option.value = category.id;
+                                option.textContent = category.name;
+                                if (category.parent_id) {
+                                    option.textContent = '  ' + option.textContent;
+                                }
+                                if (category.id == initialCategoryId) {
+                                    option.selected = true;
+                                }
+                                categorySelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Ошибка загрузки категорий:', error));
+                } else {
+                    categorySelect.innerHTML = '<option value="">---------</option>';
+                }
+            }
+
+            typeSelect.addEventListener('change', updateCategories);
+
+            if (typeSelect.value) {
+                updateCategories();
+            }
+        });
+    </script>
+{% endblock %}
